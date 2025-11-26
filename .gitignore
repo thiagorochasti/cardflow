@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+dist/
+build/
+*.spec
+.DS_Store
+.env
+venv/
+.idea/
+.vscode/
+config.json
+retorno_cartao.txt
