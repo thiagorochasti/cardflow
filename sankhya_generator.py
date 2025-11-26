@@ -38,14 +38,15 @@ class Header:
         return line
 
 class Detail:
-    def __init__(self, cnpj, nsu, data_venda, valor_venda, data_credito, valor_credito):
-        self.tipo_registro = "2"
+    def __init__(self, cnpj, nsu, data_venda, valor_venda, data_credito, valor_credito, desdobramento):
+        self.tipo_registro = "3" # Changed to 3 as per text documentation
         self.cnpj = cnpj
         self.nsu = nsu
         self.data_venda = data_venda
         self.valor_venda = valor_venda
         self.data_credito = data_credito
         self.valor_credito = valor_credito
+        self.desdobramento = desdobramento
 
     def _format_number(self, value, length, decimals=0):
         """Formats a number/string to a fixed width string with leading zeros."""
@@ -127,6 +128,9 @@ class Detail:
         
         # 76-76: Filler (1)
         
+        # 77-79: Desdobramento (3) - Custom addition based on text requirement
+        desdobramento_fmt = self._format_number(self.desdobramento, 3)
+        
         line = (
             f"{self.tipo_registro}"
             f"{cnpj_fmt}"
@@ -136,6 +140,7 @@ class Detail:
             f"{dt_cred_fmt}"
             f"{val_cred_fmt}"
             " "
+            f"{desdobramento_fmt}"
         )
         return line
 
@@ -167,7 +172,7 @@ def generate_file(output_path, sequencial, transactions):
             # VLRTRANSACAO -> Valor Venda
             # NSU -> NSU
             # AUTORIZACAO -> Used if NSU is empty? Or just ignored?
-            # DESDOBRAMENTO -> Ignored in current output layout
+            # DESDOBRAMENTO -> Desdobramento
             
             # Defaults for missing fields in client CSV:
             # CNPJ -> Empty (User didn't provide)
@@ -177,6 +182,7 @@ def generate_file(output_path, sequencial, transactions):
             data_venda = t.get('DTTRANSACAO', t.get('DATA_VENDA', ''))
             valor_venda = t.get('VLRTRANSACAO', t.get('VALOR_VENDA', '0'))
             nsu = t.get('NSU', t.get('NSU_TRANSACAO', ''))
+            desdobramento = t.get('DESDOBRAMENTO', '1') # Default to 1 if missing
             
             # Fallback for NSU using Autorizacao if NSU is missing
             if not nsu:
@@ -188,6 +194,7 @@ def generate_file(output_path, sequencial, transactions):
                 data_venda=data_venda,
                 valor_venda=valor_venda,
                 data_credito=t.get('DATA_CREDITO', data_venda), # Default to Data Venda
-                valor_credito=t.get('VALOR_CREDITO', valor_venda) # Default to Valor Venda
+                valor_credito=t.get('VALOR_CREDITO', valor_venda), # Default to Valor Venda
+                desdobramento=desdobramento
             )
             f.write(detail.format() + '\n')
