@@ -162,12 +162,32 @@ def generate_file(output_path, sequencial, transactions):
         f.write(header.format() + '\n')
         
         for t in transactions:
+            # Mapping from Client CSV (DTTRANSACAO, etc) to Output Layout
+            # DTTRANSACAO -> Data Venda
+            # VLRTRANSACAO -> Valor Venda
+            # NSU -> NSU
+            # AUTORIZACAO -> Used if NSU is empty? Or just ignored?
+            # DESDOBRAMENTO -> Ignored in current output layout
+            
+            # Defaults for missing fields in client CSV:
+            # CNPJ -> Empty (User didn't provide)
+            # Data Credito -> Same as Data Venda (Assumption)
+            # Valor Credito -> Same as Valor Venda (Assumption)
+            
+            data_venda = t.get('DTTRANSACAO', t.get('DATA_VENDA', ''))
+            valor_venda = t.get('VLRTRANSACAO', t.get('VALOR_VENDA', '0'))
+            nsu = t.get('NSU', t.get('NSU_TRANSACAO', ''))
+            
+            # Fallback for NSU using Autorizacao if NSU is missing
+            if not nsu:
+                nsu = t.get('AUTORIZACAO', '')
+
             detail = Detail(
-                cnpj=t.get('CNPJ_ESTAB', ''),
-                nsu=t.get('NSU_TRANSACAO', ''),
-                data_venda=t.get('DATA_VENDA', ''),
-                valor_venda=t.get('VALOR_VENDA', '0'),
-                data_credito=t.get('DATA_CREDITO', ''),
-                valor_credito=t.get('VALOR_CREDITO', '0')
+                cnpj=t.get('CNPJ_ESTAB', ''), # Not in new list, defaulting to empty
+                nsu=nsu,
+                data_venda=data_venda,
+                valor_venda=valor_venda,
+                data_credito=t.get('DATA_CREDITO', data_venda), # Default to Data Venda
+                valor_credito=t.get('VALOR_CREDITO', valor_venda) # Default to Valor Venda
             )
             f.write(detail.format() + '\n')
