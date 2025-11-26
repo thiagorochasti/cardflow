@@ -146,18 +146,37 @@ class Detail:
 
 def read_csv(file_path):
     transactions = []
-    with open(file_path, mode='r', encoding='utf-8-sig') as f:
-        reader = csv.DictReader(f, delimiter=';') # Semi-colon is common in BR CSVs
-        # Fallback to comma if keys look wrong? 
-        # Let's assume semi-colon for now as it's standard for Excel CSV in PT-BR regions, 
-        # but we can check fieldnames.
-        if reader.fieldnames and len(reader.fieldnames) == 1 and ';' not in reader.fieldnames[0]:
-             # Try comma
-             f.seek(0)
-             reader = csv.DictReader(f, delimiter=',')
-
-        for row in reader:
-            transactions.append(row)
+    encodings = ['utf-8-sig', 'latin-1', 'cp1252']
+    
+    for encoding in encodings:
+        try:
+            with open(file_path, mode='r', encoding=encoding) as f:
+                # Read first line to sniff delimiter
+                sample = f.readline()
+                f.seek(0)
+                
+                delimiter = ';' if ';' in sample else ','
+                
+                reader = csv.DictReader(f, delimiter=delimiter)
+                
+                # Normalize headers (strip spaces)
+                if reader.fieldnames:
+                    reader.fieldnames = [name.strip() for name in reader.fieldnames]
+                
+                for row in reader:
+                    # Normalize row keys too just in case
+                    clean_row = {k.strip(): v for k, v in row.items() if k}
+                    transactions.append(clean_row)
+            
+            # If we got here and have transactions (or at least read the file), break
+            if transactions or os.path.getsize(file_path) < 10: # Empty file check
+                break
+                
+        except UnicodeDecodeError:
+            continue
+        except Exception:
+            continue
+            
     return transactions
 
 def generate_file(output_path, sequencial, transactions):
