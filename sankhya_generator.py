@@ -4,7 +4,7 @@ import datetime
 class Header:
     def __init__(self, sequencial):
         self.tipo_registro = "1"
-        self.identificacao = "RETORNO CARTAO"
+        self.identificacao = "RETORNO CARTAO v3"
         self.sequencial = sequencial
         self.now = datetime.datetime.now()
 
