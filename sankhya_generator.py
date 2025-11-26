@@ -167,22 +167,18 @@ def generate_file(output_path, sequencial, transactions):
         f.write(header.format() + '\n')
         
         for t in transactions:
-            # Mapping from Client CSV (DTTRANSACAO, etc) to Output Layout
+            # Mapping from Client CSV to Output Layout
             # DTTRANSACAO -> Data Venda
             # VLRTRANSACAO -> Valor Venda
             # NSU -> NSU
-            # AUTORIZACAO -> Used if NSU is empty? Or just ignored?
+            # AUTORIZACAO -> Fallback for NSU
             # DESDOBRAMENTO -> Desdobramento
             
-            # Defaults for missing fields in client CSV:
-            # CNPJ -> Empty (User didn't provide)
-            # Data Credito -> Same as Data Venda (Assumption)
-            # Valor Credito -> Same as Valor Venda (Assumption)
-            
-            data_venda = t.get('DTTRANSACAO', t.get('DATA_VENDA', ''))
-            valor_venda = t.get('VLRTRANSACAO', t.get('VALOR_VENDA', '0'))
-            nsu = t.get('NSU', t.get('NSU_TRANSACAO', ''))
-            desdobramento = t.get('DESDOBRAMENTO', '1') # Default to 1 if missing
+            # Use exact column names from the CSV file
+            data_venda = t.get('DTTRANSACAO', '')
+            valor_venda = t.get('VLRTRANSACAO', '0')
+            nsu = t.get('NSU', '')
+            desdobramento = t.get('DESDOBRAMENTO', '1')
             
             # Fallback for NSU using Autorizacao if NSU is missing
             if not nsu:
