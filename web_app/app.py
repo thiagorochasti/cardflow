@@ -1,5 +1,12 @@
-from flask import Flask, render_template, request, send_file, flash, redirect, url_for
+import sys
 import os
+
+# Add parent directory to path to import sankhya_generator from root
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
+from flask import Flask, render_template, request, send_file, flash, redirect, url_for
 import sankhya_generator
 from werkzeug.utils import secure_filename
 import tempfile

@@ -153,6 +153,18 @@ class SankhyaApp(ctk.CTk):
         # Start thread
         threading.Thread(target=self.process_generation, daemon=True).start()
 
+    def get_unique_output_path(self, directory, base_name="retorno_cartao.txt"):
+        name, ext = os.path.splitext(base_name)
+        counter = 1
+        output_path = os.path.join(directory, base_name)
+        
+        while os.path.exists(output_path):
+            new_name = f"{name} ({counter}){ext}"
+            output_path = os.path.join(directory, new_name)
+            counter += 1
+            
+        return output_path
+
     def process_generation(self):
         try:
             # Simulate processing 
@@ -165,7 +177,7 @@ class SankhyaApp(ctk.CTk):
             # Actual Generation
             # Output to the application directory (where the exe is)
             directory = self.get_app_path()
-            self.output_path = os.path.join(directory, "retorno_cartao.txt")
+            self.output_path = self.get_unique_output_path(directory)
             
             transactions = sankhya_generator.read_csv(self.file_path)
             
